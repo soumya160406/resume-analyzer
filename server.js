@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-
 dotenv.config();
 
 import express from "express";
@@ -8,16 +7,23 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import resumeRoutes from "./routes/resumeRoutes.js";
 
-
-// console.log("EMAIL_USER:", process.env.EMAIL_USER);
-// console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded" : "Not Loaded");
-
-// Connect to MongoDB
-connectDB();
-
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    }
+}));
+
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
@@ -29,6 +35,8 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+connectDB();
